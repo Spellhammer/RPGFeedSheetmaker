@@ -195,6 +195,7 @@
 
         .sheet .cell-wrapper.divider {
             border-top: 1px solid var(--cbg);
+            border-radius: 0px;
         }
 
         /* Cell width & height classes */
@@ -422,6 +423,35 @@
         .sheet-wrapper.dark .export-import button  {
             color: var(--black);
             border-style: none;
+        }
+
+        @media print {
+            .sheet-wrapper,
+            body {
+                background-color: white !important;
+            }
+
+            .topbar {
+                display: none !important;
+            }
+
+            .sheet {
+                max-width: 90% !important;
+            }
+
+            input,
+            textarea {
+                border: none !important;
+            }
+
+            input,
+            textarea {
+                border: 1px solid black !important;
+            }
+
+            .cell-wrapper.static {
+                background-color: #EFEFEF;
+            }
         }
     </style>
 </head>
