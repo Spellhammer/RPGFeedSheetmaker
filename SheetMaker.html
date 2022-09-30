@@ -2,6 +2,11 @@
 <head>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        @font-face {
+            font-family: 'Dicier';
+            src: url('assets/dicier-woff2/Dicier-Flat-Light.woff2') format('woff2');
+        }
+
         :root {
             --cprimary: none;
             --csecondary: none;
@@ -116,18 +121,29 @@
         }
 
         .toolbar .toolbar-section {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
             margin: 8px 0px;
+            gap: 8px;
         }
 
         .toolbar .toolbar-section > p:first-child {
             padding-bottom: 4px;
             margin-bottom: 4px;
             border-bottom: 1px solid var(--cbg);
+            width: 100%;
         }
 
         .toolbar .toolbar-section textarea {
             margin-top: 4px;
             min-height: 125px;
+        }
+
+        .toolbar .toolbar-section label {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .sheet input:not([type="checkbox"]),
@@ -161,6 +177,7 @@
             display: flex;
             align-items: center;
             border-radius: var(--radius);
+            overflow: hidden;
         }
 
         .sheet .cell-wrapper.spacer {
@@ -298,30 +315,19 @@
         }
 
         /* -- Image cell */
-        .image-cell-inner-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-        }
-
-        .image-cell-inner-wrapper label {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1;
-        }
-
-        .image-cell-inner-wrapper img {
+        .cell-wrapper.img img {
             position: absolute;
             object-fit: cover;
             width: 100%;
             height: 100%;
             border-radius: var(--radius);
+        }
+
+        /* -- Die cell */
+        .cell-wrapper.die {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         /* -- SVG cell */
         /* .cell-wrapper.svg {
@@ -340,6 +346,13 @@
             justify-content: center;
         }
 
+        /* -- Die cell */
+        .cell-wrapper.die .die-cell-inner-wrapper {
+            display: flex;
+            flex-direction: row;
+            font-size: 32px;
+        }
+
         /* Viewing Mode */
         .sheet-wrapper.viewing .toolbar,
         .sheet-wrapper.viewing .add-cell {
@@ -350,7 +363,8 @@
             outline: none;
         }
 
-        .sheet-wrapper.viewing .image-cell-inner-wrapper label {
+        .sheet-wrapper.viewing .image-cell-inner-wrapper label,
+        .sheet-wrapper.viewing .die-cell-inner-wrapper label {
             display: none;
         }
         /* Themes */
@@ -377,7 +391,8 @@
         .sheet-wrapper.dark input,
         .sheet-wrapper.dark textarea,
         .sheet-wrapper.dark .topbar select,
-        .sheet-wrapper.dark .notice {
+        .sheet-wrapper.dark .notice,
+        .sheet-wrapper.dark .toolbar select {
             color: var(--white);
             border-style: none;
         }
@@ -418,7 +433,8 @@
                         width: this.defaults.width, 
                         height: 1,
                         type: type ?? this.defaults.type,
-                        border: false
+                        border: false,
+                        fontSize: '1rem'
                     }
                 },
                 copyCells( event ) {
@@ -596,6 +612,26 @@
                             <p>Height</p>
                             <input type="number" min="1" max="12" x-model="cells[editing].height" @click="defaults.height = cells[editing].height">
                         </div>
+                        <template x-if="cells[editing].type == 'die'">
+                            <div class="toolbar-section">
+                                <p>Cell Options</p>
+                                <label>
+                                    Choose Die Type
+                                    <select x-model="cells[editing].text">
+                                        <option value="4_ON_D4">d4</option>
+                                        <option value="6_ON_D6">d6</option>
+                                        <option value="8_ON_D8">d8</option>
+                                        <option value="10_ON_D10">d10</option>
+                                        <option value="12_ON_D12">d12</option>
+                                        <option value="20_ON_D20">d20</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Font Size
+                                    <input type="text" x-model="cells[editing].fontSize">
+                                </label>
+                            </div>
+                        </template>
                         <div class="toolbar-section">
                             <p>Cell Type</p>
                             <button @click="applyChangeToCell( 'type', 'static' )">Static</button>
@@ -606,12 +642,13 @@
                             <button @click="applyChangeToCell( 'type', 'divider' )">Divider</button>
                             <button @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )">Image</button>
                             <button @click="applyChangeToCell( 'type', 'checkbox', 0 )">Checkbox</button>
+                            <button @click="applyChangeToCell( 'type', 'die', 0 )">Die Icon</button>
                             <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
                         </div>
                         <div class="toolbar-section">
                             <p>Style Controls</p>
-                            <button @click="applyChangeToCell( 'border', 'true' )">Add Border</button>
-                            <button @click="applyChangeToCell( 'border', 'false' )">Remove Border</button>
+                            <button x-show="!cells[editing].border" @click="applyChangeToCell( 'border', true )">Add Border</button>
+                            <button x-show="cells[editing].border" @click="applyChangeToCell( 'border', false )">Remove Border</button>
                         </div>
                         <div class="toolbar-section">
                             <p>Other Controls</p>
@@ -680,6 +717,10 @@
 
                         <template x-if="cell.type == 'checkbox'">
                             <input type="checkbox" x-model="cell.text">
+                        </template>
+
+                        <template x-if="cell.type == 'die'">
+                            <p :style="'font-size: ' + cell.fontSize + '; font-family: \'Dicier\'; margin-top: calc(' + cell.fontSize + ' * -0.30)'" x-text="cell.text"></p>
                         </template>
                     </div>
                     
