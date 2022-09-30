@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<head>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        :root {
+            --cprimary: none;
+            --csecondary: none;
+            --cbg: #EFEFEF;
+            --white: white;
+            --black: black;
+
+            --radius: 4px;
+        }
+
+        body {
+            background-color: var(--cbg);
+        }
+
+        /* Defaults & resets */
+        input,
+        textarea {
+            box-sizing: border-box;
+        }
+
+        p {
+            margin-block-start: 0;
+            margin-block-end: 0;
+        }
+
+        /* Infinite Sheet */
+        .sheet-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--cbg);
+        }
+
+        .sheet-wrapper button {
+            padding: 2px;
+            border: none;
+            background: var(--cbg);
+            cursor: pointer;
+        }
+
+        .sheet-wrapper .topbar {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .sheet-wrapper .notice {
+            position: absolute;
+            top: 32px;
+            z-index: 99;
+            padding: 8px 32px;
+            background-color: var(--black);
+            color: var(--white);
+            border-radius: var(--radius);
+            animation: ephemeral;
+            animation-timing-function: ease-in-out;
+            animation-duration: 2s;
+            animation-fill-mode: forwards;
+            animation-iteration-count: 1;
+        }
+
+        @keyframes ephemeral {
+            from {
+                top: 0;
+                opacity: 1;
+            }
+            to {
+                top: -64px;
+                opacity: 0;
+            }
+        }
+
+        .sheet {
+            isolation: isolate;
+            position: relative;
+            background-color: var(--white);
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(6, 30px);
+            grid-auto-rows: 30px;
+            gap: 4px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            left: 128px;
+            max-width: 300px;
+            max-height: 100vh;
+            width: 100%;
+            gap: 8px;
+            position: fixed;
+            background: var(--white);
+            padding: 8px;
+            border-radius: var(--radius);
+            border: 1px solid var(--cbg);
+        }
+
+        .toolbar .number {
+            width: calc(50% - 4px);
+        }
+
+        .toolbar .toolbar-section {
+            margin: 8px 0px;
+        }
+
+        .toolbar .toolbar-section > p:first-child {
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--cbg);
+        }
+
+        .toolbar .toolbar-section textarea {
+            margin-top: 4px;
+            min-height: 125px;
+        }
+
+        .sheet input:not([type="checkbox"]),
+        .sheet textarea {
+            padding: 4px;
+            border-color: var(--cbg);
+            border-style: dashed;
+            border-radius: var(--radius);
+            width: 100%;
+            box-sizing: border-box;
+            resize: none;
+            height: 100%;
+        }
+
+        .sheet [data-editing] {
+            outline: 1px dashed var(--black);
+        }
+
+        .sheet .add-cell {
+            padding: 4px;
+            background: none;
+            border-color: var(--cbg);
+            border-style: dashed;
+            border-radius: var(--radius);
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .sheet .cell-wrapper {
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius);
+        }
+
+        .sheet .cell-wrapper.spacer {
+            background-color: var(--white);
+        }
+
+        .sheet .cell-wrapper.divider {
+            border-top: 1px solid var(--cbg);
+        }
+
+        /* Cell width & height classes */
+        .width-1 {
+            grid-column: span 1;
+        }
+
+        .width-2 {
+            grid-column: span 2;
+        }
+
+        .width-3 {
+            grid-column: span 3;
+        }
+
+        .width-4 {
+            grid-column: span 4;
+        }
+
+        .width-5 {
+            grid-column: span 5;
+        }
+
+        .width-6 {
+            grid-column: span 6;
+        }
+
+        .width-7 {
+            grid-column: span 7;
+        }
+
+        .width-8 {
+            grid-column: span 8;
+        }
+
+        .width-9 {
+            grid-column: span 9;
+        }
+
+        .width-10 {
+            grid-column: span 10;
+        }
+
+        .width-11 {
+            grid-column: span 11;
+        }
+
+        .width-12 {
+            grid-column: span 12;
+        }
+
+        .height-1 {
+            grid-row: span 1;
+        }
+
+        .height-2 {
+            grid-row: span 2;
+        }
+
+        .height-3 {
+            grid-row: span 3;
+        }
+
+        .height-4 {
+            grid-row: span 4;
+        }
+
+        .height-5 {
+            grid-row: span 5;
+        }
+
+        .height-6 {
+            grid-row: span 6;
+        }
+
+        .height-7 {
+            grid-row: span 7;
+        }
+
+        .height-8 {
+            grid-row: span 8;
+        }
+
+        .height-9 {
+            grid-row: span 9;
+        }
+
+        .height-10 {
+            grid-row: span 10;
+        }
+
+        .height-11 {
+            grid-row: span 11;
+        }
+
+        .height-12 {
+            grid-row: span 12;
+        }
+
+        /* Cell border & background classes */
+
+        .cell-wrapper.border {
+            border: 1px solid var(--black);
+            border-radius: var(--radius);
+        }
+
+        /* Special Cells */
+        .cell-wrapper.static {
+            padding-left: 4px;
+            border-radius: var(--radius);
+            background-color: var(--cbg);
+        }
+
+        /* -- Number cell */
+        .number-cell-row {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .number-cell-row button {
+            border: none;
+            background: none;
+            padding: 8px;
+        }
+
+        /* -- Image cell */
+        .image-cell-inner-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        .image-cell-inner-wrapper label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .image-cell-inner-wrapper img {
+            position: absolute;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            border-radius: var(--radius);
+        }
+        /* -- SVG cell */
+        /* .cell-wrapper.svg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .cell-wrapper.svg .svg-cell-svg-box > svg {
+            width: 100%;
+        } */
+
+        /* -- Checkbox cell */
+        .cell-wrapper.checkbox {
+            justify-content: center;
+        }
+
+        /* Viewing Mode */
+        .sheet-wrapper.viewing .toolbar,
+        .sheet-wrapper.viewing .add-cell {
+            display: none;
+        }
+
+        .sheet-wrapper.viewing [data-editing] {
+            outline: none;
+        }
+
+        .sheet-wrapper.viewing .image-cell-inner-wrapper label {
+            display: none;
+        }
+        /* Themes */
+
+        /* -- dark */
+        .sheet-wrapper.dark {
+            --cprimary: none;
+            --csecondary: none;
+            --cbg: rgb(34, 45, 62);
+            --white: rgb(14, 26, 45);
+            --black: white;
+
+            --radius: 4px;     
+        }
+
+        .sheet-wrapper.dark * {
+            color: var(--black);
+        }
+
+        .sheet-wrapper.dark button {
+            color: var(--white);
+        }
+
+        .sheet-wrapper.dark input,
+        .sheet-wrapper.dark textarea,
+        .sheet-wrapper.dark .topbar select,
+        .sheet-wrapper.dark .notice {
+            color: var(--white);
+            border-style: none;
+        }
+
+        .sheet-wrapper.dark .number-cell-row > button,
+        .sheet-wrapper.dark .add-cell,
+        .sheet-wrapper.dark .cell-wrapper.static > p,
+        .sheet-wrapper.dark .toolbar button,
+        .sheet-wrapper.dark .topbar button  {
+            color: var(--black);
+            border-style: none;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function sheetData() {
+            return {
+                name: "Sheet",
+                theme: "dark",
+                mode: 'viewing',
+                editing: null,
+                editingMultiple: [],
+                cells: [],
+                defaults: {
+                    width: 4,
+                    type: 'text'
+                },
+                clipboard: [],
+                notice: {
+                    active: false,
+                    message: 'Notice Message'
+                },
+                savedSheets: [],
+                newCell(type) {
+                    return {
+                        text: 'Cell', 
+                        width: this.defaults.width, 
+                        height: 1,
+                        type: type ?? this.defaults.type,
+                        border: false
+                    }
+                },
+                copyCells( event ) {
+                    if( event.target.closest('.toolbar') ) return true;
+                    if( this.mode != 'editing' ) return true;
+                    
+                    let cells = {};
+                    this.clipboard = [];
+
+                    if( this.editingMultiple.length < 1 ) {
+                        this.clipboard = [...this.clipboard, this.cells[this.editing]];
+                    } else {
+                        this.editingMultiple.forEach( (index) => {
+                            this.clipboard = [...this.clipboard, this.cells[index]];
+                        });
+                    }
+                },
+                pasteCells( event ) {
+                    if( event.target.closest('.toolbar') ) return true;
+                    if( this.mode != 'editing' ) return true;
+
+                    document.activeElement.blur();
+
+                    this.clipboard.forEach( (cell) => {
+                        let cellToCopy = JSON.stringify(cell);
+                        this.cells.splice(this.editing + 1, 0, JSON.parse(cellToCopy));
+                        this.editing = this.editing + 1;
+                    })
+                },
+                defocus( event ) {
+                    if( 
+                        event.target.closest('.toolbar') ||
+                        event.target.classList.contains('add-cell')  ) return false;
+
+                    this.editing = null;
+                    this.editingMultiple = [];
+                },
+                getCellClasses( cell ) {
+                    let classes = '';
+
+                    classes += ' width-' + cell.width;
+                    classes += ' height-' + cell.height;
+                    classes += ' ' + cell.type;
+
+                    if( cell.border ) classes += ' border';
+
+                    return classes;
+                },
+                clickCellWrapper( event, index ) {
+                    if( this.mode != 'editing' ) return;
+
+                    if( event.metaKey ) {
+                        this.editingMultiple = [...this.editingMultiple, this.editing, index];
+                        this.editingMultiple = [...new Set(this.editingMultiple)].sort((a, b) => a - b);
+                    } else {
+                        this.editingMultiple = [];
+                        this.editing = index;
+                    }
+
+                },
+                cellSelectedClass( index ) {
+                    if( this.editing == index ) return true;
+
+                    if( this.editingMultiple.includes(index) ) return true;
+                },
+                applyChangeToCell( property, value, textValue ) {
+                    if( this.editingMultiple.length < 1 ) {
+                        this.cells[this.editing][property] = value;
+                        this.defaults[property] = value;
+
+                        if( textValue ) this.cells[this.editing].text = textValue;
+                    }
+
+                    this.editingMultiple.forEach( (index) => {
+                        this.cells[index][property] = value; 
+                        this.defaults[property] = value;
+
+                        if( textValue ) this.cells[index].text = textValue;
+                    })
+                },
+                activateNotice( message ) {
+                    this.notice.message = message;
+                    this.notice.active = true;
+
+                    setTimeout(() => {
+                        this.notice.active = false;
+                    }, 1000);
+                },
+                saveSheet() {
+                    let localSheets = []
+                    
+                    if( window.localStorage.getItem('RPGFeedSheetmakerSheets') ) {
+                        JSON.parse( window.localStorage.getItem( 'RPGFeedSheetmakerSheets' ) ).forEach( (sheet) => {
+                            localSheets = [...localSheets, {name: sheet.name, cells: sheet.cells}];
+                        })
+                    }
+                    
+                    localSheets.push( {name: this.name, cells: this.cells} );
+
+                    window.localStorage.setItem( 'RPGFeedSheetmakerSheets', JSON.stringify( localSheets ) );
+
+                    return true;
+                },
+                deleteSheet( sheetName ) {
+                    let sheetsMinusDeleted = this.savedSheets.filter( (savedSheet) => { return savedSheet.name != sheetName });
+
+                    this.savedSheets = sheetsMinusDeleted;
+
+                    window.localStorage.setItem( 'RPGFeedSheetmakerSheets', JSON.stringify( this.savedSheets ) );
+
+                    return true;
+                },
+                preLoadAllSheets() {
+                    if( !window.localStorage.getItem('RPGFeedSheetmakerSheets') ) return;
+
+                    this.savedSheets = JSON.parse( window.localStorage.getItem( 'RPGFeedSheetmakerSheets' ) );
+
+                    return;
+                },
+                loadSelectedSheet() {
+                    this.cells = this.savedSheets.filter( sheet => sheet.name == this.name )[0]?.cells;
+                }
+            }
+        }
+    </script>
+    <section 
+        class="sheet-wrapper" 
+        :class="theme + ' ' + mode"
+        x-data="sheetData()"
+        @keydown.c.cmd.window="copyCells( $event )"
+        @keydown.v.cmd.window="pasteCells( $event )"
+        @keydown.backspace.cmd.window="cells.splice(editing, 1)"
+        @keydown.right.cmd.window.prevent="cells[editing].width ++"
+        @keydown.left.cmd.window.prevent="cells[editing].width --"
+        @keydown.down.cmd.window.prevent="cells[editing].height ++"
+        @keydown.up.cmd.window.prevent="cells[editing].height --"
+        x-init="preLoadAllSheets(); theme = localStorage.getItem('RPGFeedSheetmakerTheme')">
+
+
+            <div class="topbar">
+                <select x-model="name" @change="loadSelectedSheet()">
+                    <option>Load Sheet</option>
+                    <template x-for="(sheet, index) in savedSheets">
+                        <option x-text="sheet.name"></option>
+                    </template>
+                </select>
+                <label>
+                    Sheet Name
+                    <input type="text" x-model="name">
+                </label>
+                <button @click="if( saveSheet() ) activateNotice('Sheet saved')">Save Sheet</button>
+                <button @click="if( deleteSheet( name ) ) activateNotice('Sheet deleted')">Delete Sheet</button>
+                <button>Export Sheet</button>
+                <button>Import Sheet</button>
+                <button x-show="mode == 'viewing'" @click="mode = 'editing'">Edit Mode</button>
+                <button x-show="mode == 'editing'" @click="mode = 'viewing'">View Mode</button>
+                <select x-model="theme" @change="localStorage.setItem('RPGFeedSheetmakerTheme', theme)">
+                    <option>basic</option>
+                    <option>dark</option>
+                </select>
+            </div>
+
+            <template x-if="notice.active">
+                <p class="notice" x-text="notice.message"></p>
+            </template>
+
+            <div class="sheet">
+                <template x-if="editing != null && cells[editing] && mode == 'editing'">
+                    <div class="toolbar">
+                        <div class="number">
+                            <p>Width</p>
+                            <input type="number" min="1" max="12" x-model="cells[editing].width" @click="defaults.width = cells[editing].width">
+                        </div>
+                        <div class="number">
+                            <p>Height</p>
+                            <input type="number" min="1" max="12" x-model="cells[editing].height" @click="defaults.height = cells[editing].height">
+                        </div>
+                        <div class="toolbar-section">
+                            <p>Cell Type</p>
+                            <button @click="applyChangeToCell( 'type', 'static' )">Static</button>
+                            <button @click="applyChangeToCell( 'type', 'number', '0' )">Number</button>
+                            <button @click="applyChangeToCell( 'type', 'text', 'Text' )">Text</button>
+                            <button @click="applyChangeToCell( 'type', 'textarea', 'Textarea' )">Textarea</button>
+                            <button @click="applyChangeToCell( 'type', 'spacer' )">Spacer</button>
+                            <button @click="applyChangeToCell( 'type', 'divider' )">Divider</button>
+                            <button @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )">Image</button>
+                            <button @click="applyChangeToCell( 'type', 'checkbox', 0 )">Checkbox</button>
+                            <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
+                        </div>
+                        <div class="toolbar-section">
+                            <p>Style Controls</p>
+                            <button @click="applyChangeToCell( 'border', 'true' )">Add Border</button>
+                            <button @click="applyChangeToCell( 'border', 'false' )">Remove Border</button>
+                        </div>
+                        <div class="toolbar-section">
+                            <p>Other Controls</p>
+                            <button @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
+                            <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
+                            <button @click="cells.splice(editing, 1)">Delete</button>
+                            <button @click="cells = JSON.parse( document.querySelector('#import-input').value )">Import</button>
+                            <textarea id="import-input" x-model="JSON.stringify(cells)"></textarea>
+                        </div>
+                    </div>   
+                </template>
+
+                <template x-for="(cell, index) in cells">
+                    
+                    <div 
+                        :id="index" 
+                        :data-editing="cellSelectedClass(index)" 
+                        @click.stop="clickCellWrapper( $event, index )"
+                        @click.outside="defocus( $event )"
+                        class="cell-wrapper" 
+                        :class="getCellClasses(cell)"
+                        >
+                        <!-- Static text cell -->
+                        <template x-if="cell.type == 'static'">
+                            <p x-text="cell.text"></p>
+                        </template>
+
+                        <!-- Simple text cell -->
+                        <template x-if="cell.type == 'text'">
+                            <input x-model="cell.text" />
+                        </template>
+
+                        <!-- Textarea cell -->
+                        <template x-if="cell.type == 'textarea'">
+                            <textarea x-model="cell.text"></textarea>
+                        </template>
+
+                        <template x-if="cell.type == 'number'">
+                            <div class="number-cell-row">
+                                <button @click="cell.text--">-</button>
+                                <input type="text" x-model="cell.text">
+                                <button @click="cell.text++">+</button>
+                            </div>
+                        </template>
+
+                        <template x-if="cell.type == 'image'">
+                            <div class="image-cell-inner-wrapper">
+                                <label>
+                                    Image Url
+                                    <input x-model="cell.text">
+                                </label>
+                                <img :src="cell.text"></img>
+                            </div>
+                        </template>
+
+                        <!-- <template x-if="cell.type == 'svg'">
+                            <div class="svg-cell-inner-wrapper">
+                                <label>
+                                    SVG Code
+                                    <textarea x-model="cell.text"></textarea>
+                                </label>
+                                <div class="svg-cell-svg-box" x-html="cell.text">
+                                </div>
+                            </div>
+                        </template> -->
+
+                        <template x-if="cell.type == 'checkbox'">
+                            <input type="checkbox" x-model="cell.text">
+                        </template>
+                    </div>
+                    
+                </template>
+
+                <button class="add-cell" @click="cells = [...cells, newCell()]; editing = cells.length - 1">+</button>
+
+            </div>
+    </section>
+</body>
