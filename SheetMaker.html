@@ -53,6 +53,8 @@
         .sheet-wrapper .topbar {
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 8px;
             margin: 0 auto;
             padding: 16px;
@@ -71,6 +73,13 @@
             animation-duration: 2s;
             animation-fill-mode: forwards;
             animation-iteration-count: 1;
+        }
+
+        .sheet-wrapper .sheet.export-import {
+            display: flex;
+            flex-direction: column;
+            min-height: unset;
+            margin-bottom: 32px;
         }
 
         @keyframes ephemeral {
@@ -315,9 +324,14 @@
         }
 
         /* -- Image cell */
-        .cell-wrapper.img img {
+        .cell-wrapper.image {
+            position: relative;
+        }
+        .cell-wrapper.image img {
             position: absolute;
             object-fit: cover;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             border-radius: var(--radius);
@@ -350,7 +364,10 @@
         .cell-wrapper.die .die-cell-inner-wrapper {
             display: flex;
             flex-direction: row;
-            font-size: 32px;
+        }
+
+        .cell-wrapper.die .die-cell-inner-wrapper > select {
+            color: black;
         }
 
         /* Viewing Mode */
@@ -401,7 +418,8 @@
         .sheet-wrapper.dark .add-cell,
         .sheet-wrapper.dark .cell-wrapper.static > p,
         .sheet-wrapper.dark .toolbar button,
-        .sheet-wrapper.dark .topbar button  {
+        .sheet-wrapper.dark .topbar button,
+        .sheet-wrapper.dark .export-import button  {
             color: var(--black);
             border-style: none;
         }
@@ -414,6 +432,7 @@
                 name: "Sheet",
                 theme: "dark",
                 mode: 'viewing',
+                importExport: null,
                 editing: null,
                 editingMultiple: [],
                 cells: [],
@@ -587,14 +606,29 @@
                 </label>
                 <button @click="if( saveSheet() ) activateNotice('Sheet saved')">Save Sheet</button>
                 <button @click="if( deleteSheet( name ) ) activateNotice('Sheet deleted')">Delete Sheet</button>
-                <button>Export Sheet</button>
-                <button>Import Sheet</button>
+                <button @click="importExport = 'export'">Export Sheet</button>
+                <button @click="importExport = 'import'">Import Sheet</button>
                 <button x-show="mode == 'viewing'" @click="mode = 'editing'">Edit Mode</button>
                 <button x-show="mode == 'editing'" @click="mode = 'viewing'">View Mode</button>
                 <select x-model="theme" @change="localStorage.setItem('RPGFeedSheetmakerTheme', theme)">
                     <option>basic</option>
                     <option>dark</option>
                 </select>
+            </div>
+
+            <div x-show="importExport != null" class="sheet export-import">
+                <div x-show="importExport == 'export'" class="export">
+                    <p>Copy the text in the field below. Paste it back into Sheetmaker via the Import field.</p>
+                    <textarea x-model="JSON.stringify(cells)"></textarea>
+                    <button @click="importExport = null">Close</button>
+                </div>
+                <div x-show="importExport == 'import'" class="import">
+                    <p>Paste the code from a previously exported sheet and click Import.</p>
+                    <p>WARNING: This will overwrite the current sheet.</p>
+                    <textarea id="import-input"></textarea>
+                    <button @click="cells = JSON.parse( document.querySelector('#import-input').value )">Import</button>
+                    <button @click="importExport = null">Close</button>
+                </div>
             </div>
 
             <template x-if="notice.active">
@@ -612,10 +646,10 @@
                             <p>Height</p>
                             <input type="number" min="1" max="12" x-model="cells[editing].height" @click="defaults.height = cells[editing].height">
                         </div>
-                        <template x-if="cells[editing].type == 'die'">
+                        <template x-if="['die', 'static'].includes( cells[editing].type )">
                             <div class="toolbar-section">
                                 <p>Cell Options</p>
-                                <label>
+                                <!-- <label>
                                     Choose Die Type
                                     <select x-model="cells[editing].text">
                                         <option value="4_ON_D4">d4</option>
@@ -625,7 +659,7 @@
                                         <option value="12_ON_D12">d12</option>
                                         <option value="20_ON_D20">d20</option>
                                     </select>
-                                </label>
+                                </label> -->
                                 <label>
                                     Font Size
                                     <input type="text" x-model="cells[editing].fontSize">
@@ -655,8 +689,6 @@
                             <button @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
                             <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
                             <button @click="cells.splice(editing, 1)">Delete</button>
-                            <button @click="cells = JSON.parse( document.querySelector('#import-input').value )">Import</button>
-                            <textarea id="import-input" x-model="JSON.stringify(cells)"></textarea>
                         </div>
                     </div>   
                 </template>
@@ -673,7 +705,7 @@
                         >
                         <!-- Static text cell -->
                         <template x-if="cell.type == 'static'">
-                            <p x-text="cell.text"></p>
+                            <p :style="'font-size: ' + cell.fontSize" x-text="cell.text"></p>
                         </template>
 
                         <!-- Simple text cell -->
@@ -720,7 +752,17 @@
                         </template>
 
                         <template x-if="cell.type == 'die'">
-                            <p :style="'font-size: ' + cell.fontSize + '; font-family: \'Dicier\'; margin-top: calc(' + cell.fontSize + ' * -0.30)'" x-text="cell.text"></p>
+                            <div class="die-cell-inner-wrapper" x-data="{ choosing: false }">
+                                <select x-show="choosing" @change="choosing = false" @click.outside="choosing = false" stype="font-family: 'Dicier'" x-model="cell.text">
+                                    <option value="4_ON_D4">d4</option>
+                                    <option value="6_ON_D6">d6</option>
+                                    <option value="8_ON_D8">d8</option>
+                                    <option value="10_ON_D10">d10</option>
+                                    <option value="12_ON_D12">d12</option>
+                                    <option value="20_ON_D20">d20</option>
+                                </select>
+                                <p x-show="!choosing" @click="choosing = true" :style="'font-size: ' + cell.fontSize + '; font-family: \'Dicier\'; margin-top: calc(' + cell.fontSize + ' * -0.30)'" x-text="cell.text"></p>
+                            </div>
                         </template>
                     </div>
                     
