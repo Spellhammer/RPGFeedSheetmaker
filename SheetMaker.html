@@ -120,6 +120,11 @@
             border-radius: var(--radius);
         }
 
+        .toolbar:not(.active) {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
         .toolbar .toolbar-section {
             display: flex;
             flex-wrap: wrap;
@@ -643,8 +648,7 @@
                 </select>
             </div>
 
-            <template x-if="editing != null && cells[editing] && mode == 'editing'">
-                <div class="toolbar">
+                <div class="toolbar" :class="if( editing != null ) return 'active'">
                     <div class="toolbar-section">
                         <p>Cell Size</p>
                         <div class="number">
@@ -700,8 +704,7 @@
                         <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
                         <button @click="cells.splice(editing, 1)">Delete</button>
                     </div>
-                </div>   
-            </template>
+                </div>
 
             <div x-show="importExport != null" class="sheet export-import">
                 <div x-show="importExport == 'export'" class="export">
