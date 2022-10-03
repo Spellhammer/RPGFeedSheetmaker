@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://kit.fontawesome.com/24ccab2dc6.js" crossorigin="anonymous"></script>
     <style>
         @font-face {
             font-family: 'Dicier';
@@ -45,20 +46,43 @@
         }
 
         .sheet-wrapper button {
-            padding: 2px;
+            padding: 4px 8px;
             border: none;
             background: var(--cbg);
+            border-radius: var(--radius);
             cursor: pointer;
+            transition: 0.3s all ease-in-out;
+        }
+
+        .sheet-wrapper button:hover {
+            scale: 1.2;
         }
 
         .sheet-wrapper .topbar {
+            background-color: var(--white);
+            width: 100%;
             display: flex;
             flex-direction: row;
+            align-items: center;
             flex-wrap: wrap;
             justify-content: center;
             gap: 8px;
             margin: 0 auto;
             padding: 16px;
+            border-bottom: 1px solid var(--black);
+        }
+
+        .sheet-wrapper .topbar .topbar-section {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            padding: 0px 8px;
+        }
+
+        .sheet-wrapper .topbar .topbar-section > label {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
         }
 
         .sheet-wrapper .notice {
@@ -109,6 +133,9 @@
         }
 
         .toolbar {
+            position: absolute;
+            left: calc(-125px - 32px);
+            width: 105px;
             display: flex;
             flex-direction: row;
             flex-wrap: wrap;
@@ -129,6 +156,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            padding-bottom: 16px;
         }
 
         .toolbar .toolbar-section > p:first-child {
@@ -139,10 +167,15 @@
         }
 
         .toolbar .toolbar-section .number {
+            width: 100%;
             display: flex;
             flex-direction: row;
             gap: 8px;
             align-items: center;
+        }
+
+        .toolbar .toolbar-section .number i {
+            width: 20%;
         }
 
         .toolbar .toolbar-section textarea {
@@ -156,6 +189,11 @@
             flex-direction: row;
             gap: 8px;
             align-items: center;
+        }
+
+        .toolbar .toolbar-section label.vertical {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .sheet input:not([type="checkbox"]),
@@ -328,9 +366,12 @@
         }
 
         /* -- Image cell */
-        .cell-wrapper.image {
+        .cell-wrapper.image .image-cell-inner-wrapper {
             position: relative;
+            width: 100%;
+            height: 100%;
         }
+
         .cell-wrapper.image img {
             position: absolute;
             object-fit: cover;
@@ -341,11 +382,21 @@
             border-radius: var(--radius);
         }
 
+        .cell-wrapper.image .image-cell-inner-wrapper label {
+            position: absolute;
+            z-index: 10;
+        }
+
         /* -- Die cell */
         .cell-wrapper.die {
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .cell-wrapper.die .die-cell-inner-wrapper {
+            display: flex;
+            flex-direction: row;
         }
         /* -- SVG cell */
         /* .cell-wrapper.svg {
@@ -364,12 +415,6 @@
             justify-content: center;
         }
 
-        /* -- Die cell */
-        .cell-wrapper.die .die-cell-inner-wrapper {
-            display: flex;
-            flex-direction: row;
-        }
-
         .cell-wrapper.die .die-cell-inner-wrapper > select {
             color: black;
         }
@@ -384,10 +429,6 @@
             outline: none;
         }
 
-        .sheet-wrapper.viewing .image-cell-inner-wrapper label,
-        .sheet-wrapper.viewing .die-cell-inner-wrapper label {
-            display: none;
-        }
         /* Themes */
 
         /* -- dark */
@@ -598,6 +639,8 @@
                     return true;
                 },
                 deleteSheet( sheetName ) {
+                    if( !confirm('Delete ' + sheetName + '?') ) return;
+
                     let sheetsMinusDeleted = this.savedSheets.filter( (savedSheet) => { return savedSheet.name != sheetName });
 
                     this.savedSheets = sheetsMinusDeleted;
@@ -633,83 +676,34 @@
         x-init="preLoadAllSheets(); theme = localStorage.getItem('RPGFeedSheetmakerTheme')">
 
             <div class="topbar">
-                <select x-model="name" @change="loadSelectedSheet()">
-                    <option>Load Sheet</option>
-                    <template x-for="(sheet, index) in savedSheets">
-                        <option x-text="sheet.name"></option>
-                    </template>
-                </select>
-                <label>
-                    Sheet Name
-                    <input type="text" x-model="name">
-                </label>
-                <button @click="if( saveSheet() ) activateNotice('Sheet saved')">Save Sheet</button>
-                <button @click="if( deleteSheet( name ) ) activateNotice('Sheet deleted')">Delete Sheet</button>
-                <button @click="importExport = 'export'">Export Sheet</button>
-                <button @click="importExport = 'import'">Import Sheet</button>
-                <button x-show="mode == 'viewing'" @click="mode = 'editing'">Edit Mode</button>
-                <button x-show="mode == 'editing'" @click="mode = 'viewing'">View Mode</button>
-                <select x-model="theme" @change="localStorage.setItem('RPGFeedSheetmakerTheme', theme)">
-                    <option>basic</option>
-                    <option>dark</option>
-                </select>
-            </div>
-
-            <div class="toolbar" :class="if( editing != null ) return 'active'">
-                <div class="toolbar-section">
-                    <p>Cell Size</p>
-                    <div class="number">
-                        <p>Width</p>
-                        <input type="number" min="1" max="12" :value="cells[editing]?.width" @change="cells[editing].width = $event.target.value" @click="defaults.width = cells[editing].width">
-                    </div>
-                    <div class="number">
-                        <p>Height</p>
-                        <input type="number" min="1" max="12" :value="cells[editing]?.height" @change="cells[editing].height = $event.target.value" @click="defaults.height = cells[editing].height">
-                    </div>
+                <div class="topbar-section">
+                    <select x-model="name" @change="loadSelectedSheet()">
+                        <option>Load Sheet</option>
+                        <template x-for="(sheet, index) in savedSheets">
+                            <option x-text="sheet.name"></option>
+                        </template>
+                    </select>
+                    <label>
+                        Sheet Name
+                        <input type="text" x-model="name">
+                    </label>
                 </div>
-                <template x-if="['die', 'static'].includes( cells[editing]?.type )">
-                    <div class="toolbar-section">
-                        <p>Cell Options</p>
-                        <!-- <label>
-                            Choose Die Type
-                            <select x-model="cells[editing].text">
-                                <option value="4_ON_D4">d4</option>
-                                <option value="6_ON_D6">d6</option>
-                                <option value="8_ON_D8">d8</option>
-                                <option value="10_ON_D10">d10</option>
-                                <option value="12_ON_D12">d12</option>
-                                <option value="20_ON_D20">d20</option>
-                            </select>
-                        </label> -->
-                        <label>
-                            Font Size
-                            <input type="text" x-model="cells[editing].fontSize">
-                        </label>
-                    </div>
-                </template>
-                <div class="toolbar-section">
-                    <p>Cell Type</p>
-                    <button @click="applyChangeToCell( 'type', 'static' )">Static</button>
-                    <button @click="applyChangeToCell( 'type', 'number', '0' )">Number</button>
-                    <button @click="applyChangeToCell( 'type', 'text', 'Text' )">Text</button>
-                    <button @click="applyChangeToCell( 'type', 'textarea', 'Textarea' )">Textarea</button>
-                    <button @click="applyChangeToCell( 'type', 'spacer' )">Spacer</button>
-                    <button @click="applyChangeToCell( 'type', 'divider' )">Divider</button>
-                    <button @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )">Image</button>
-                    <button @click="applyChangeToCell( 'type', 'checkbox', 0 )">Checkbox</button>
-                    <button @click="applyChangeToCell( 'type', 'die', '6_ON_D6' )">Die Icon</button>
-                    <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
+                <div class="topbar-section">
+                    <button title="Save Sheet" @click="if( saveSheet() ) activateNotice('Sheet saved')"><i class="fa-regular fa-floppy-disk"></i></button>
+                    <button title="Delete Sheet" @click="if( deleteSheet( name ) ) activateNotice('Sheet deleted')"><i class="fa-regular fa-rectangle-xmark"></i></button>
+                    <button title="Export Sheet" @click="importExport = 'export'"><i class="fa-solid fa-file-export"></i></button>
+                    <button title="Import Sheet" @click="importExport = 'import'"><i class="fa-solid fa-file-import"></i></button>
+                    <button title="Edit Sheet" x-show="mode == 'viewing'" @click="mode = 'editing'"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button title="View Sheet" x-show="mode == 'editing'" @click="mode = 'viewing'"><i class="fa-regular fa-eye"></i></button>
                 </div>
-                <div class="toolbar-section">
-                    <p>Style Controls</p>
-                    <button x-show="!cells[editing]?.border" @click="applyChangeToCell( 'border', true )">Toggle Border</button>
-                    <button x-show="cells[editing]?.border" @click="applyChangeToCell( 'border', false )">Toggle Border</button>
-                </div>
-                <div class="toolbar-section">
-                    <p>Other Controls</p>
-                    <button @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
-                    <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
-                    <button @click="cells.splice(editing, 1)">Delete</button>
+                <div class="topbar-section">
+                    <label>
+                        <i class="fa-solid fa-palette"></i>
+                        <select x-model="theme" @change="localStorage.setItem('RPGFeedSheetmakerTheme', theme)">
+                            <option>basic</option>
+                            <option>dark</option>
+                        </select>
+                    </label>
                 </div>
             </div>
 
@@ -733,6 +727,67 @@
             </template>
 
             <div class="sheet">
+                <div class="toolbar" :class="if( editing != null ) return 'active'">
+                    <div class="toolbar-section">
+                        <p>Cell Size</p>
+                        <div class="number">
+                            <label>
+                                <i class="fa-solid fa-arrows-up-down"></i>
+                                <input type="number" min="1" max="12" :value="cells[editing]?.width" @change="cells[editing].width = $event.target.value" @click="defaults.width = cells[editing].width">
+                            </label>
+                        </div>
+                        <div class="number">
+                            <label>
+                                <i class="fa-solid fa-arrows-left-right"></i>
+                                <input type="number" min="1" max="12" :value="cells[editing]?.height" @change="cells[editing].height = $event.target.value" @click="defaults.height = cells[editing].height">
+                            </label>
+                        </div>
+                    </div>
+                    <template x-if="['die', 'static'].includes( cells[editing]?.type )">
+                        <div class="toolbar-section">
+                            <p>Cell Options</p>
+                            <!-- <label>
+                                Choose Die Type
+                                <select x-model="cells[editing].text">
+                                    <option value="4_ON_D4">d4</option>
+                                    <option value="6_ON_D6">d6</option>
+                                    <option value="8_ON_D8">d8</option>
+                                    <option value="10_ON_D10">d10</option>
+                                    <option value="12_ON_D12">d12</option>
+                                    <option value="20_ON_D20">d20</option>
+                                </select>
+                            </label> -->
+                            <label class="vertical">
+                                Font Size
+                                <input type="text" x-model="cells[editing].fontSize">
+                            </label>
+                        </div>
+                    </template>
+                    <div class="toolbar-section">
+                        <p>Cell Type</p>
+                        <button title="Static / Label" @click="applyChangeToCell( 'type', 'static' )"><i class="fa-solid fa-tag"></i></button>
+                        <button title="Number" @click="applyChangeToCell( 'type', 'number', '0' )"><i class="fa-solid fa-hashtag"></i></button>
+                        <button title="Fillable Text" @click="applyChangeToCell( 'type', 'text', 'Text' )"><i class="fa-solid fa-font"></i></button>
+                        <button title="Fillable Textarea" @click="applyChangeToCell( 'type', 'textarea', 'Textarea' )"><i class="fa-solid fa-paragraph"></i></button>
+                        <button title="Spacer" @click="applyChangeToCell( 'type', 'spacer' )"><i class="fa-solid fa-arrows-down-to-line"></i></button>
+                        <button title="Divider" @click="applyChangeToCell( 'type', 'divider' )"><i class="fa-solid fa-divide"></i></button>
+                        <button title="Image" @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )"><i class="fa-regular fa-image"></i></button>
+                        <button title="Checkbox" @click="applyChangeToCell( 'type', 'checkbox', 0 )"><i class="fa-regular fa-square-check"></i></button>
+                        <button title="Die Icon" @click="applyChangeToCell( 'type', 'die', '6_ON_D6' )" style="font-family: 'Dicier'">20_ON_D20</button>
+                        <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
+                    </div>
+                    <div class="toolbar-section">
+                        <p>Style Controls</p>
+                        <button x-show="!cells[editing]?.border" @click="applyChangeToCell( 'border', true )"><i class="fa-solid fa-border-all"></i></button>
+                        <button x-show="cells[editing]?.border" @click="applyChangeToCell( 'border', false )"><i class="fa-solid fa-border-none"></i></button>
+                    </div>
+                    <div class="toolbar-section">
+                        <p>Other Controls</p>
+                        <button title="Insert Before" @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
+                        <button title="Insert After" @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
+                        <button title="Delete Cell" @click="cells.splice(editing, 1)"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                </div>
                 <template x-for="(cell, index) in cells">
                     
                     <div 
@@ -767,12 +822,12 @@
                         </template>
 
                         <template x-if="cell.type == 'image'">
-                            <div class="image-cell-inner-wrapper">
-                                <label>
-                                    Image Url
+                            <div class="image-cell-inner-wrapper" x-data="{ choosing: false }">
+                                <label x-show="choosing" style="z-index: 10">
+                                    Image URL
                                     <input x-model="cell.text">
                                 </label>
-                                <img :src="cell.text"></img>
+                                <img @click="choosing = !choosing" :src="cell.text"></img>
                             </div>
                         </template>
 
