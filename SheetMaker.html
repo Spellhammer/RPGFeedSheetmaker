@@ -648,63 +648,63 @@
                 </select>
             </div>
 
-                <div class="toolbar" :class="if( editing != null ) return 'active'">
-                    <div class="toolbar-section">
-                        <p>Cell Size</p>
-                        <div class="number">
-                            <p>Width</p>
-                            <input type="number" min="1" max="12" x-model="cells[editing].width" @click="defaults.width = cells[editing].width">
-                        </div>
-                        <div class="number">
-                            <p>Height</p>
-                            <input type="number" min="1" max="12" x-model="cells[editing].height" @click="defaults.height = cells[editing].height">
-                        </div>
+            <div class="toolbar" :class="if( editing != null ) return 'active'">
+                <div class="toolbar-section">
+                    <p>Cell Size</p>
+                    <div class="number">
+                        <p>Width</p>
+                        <input type="number" min="1" max="12" :value="cells[editing]?.width" @change="cells[editing].width = $event.target.value" @click="defaults.width = cells[editing].width">
                     </div>
-                    <template x-if="['die', 'static'].includes( cells[editing].type )">
-                        <div class="toolbar-section">
-                            <p>Cell Options</p>
-                            <!-- <label>
-                                Choose Die Type
-                                <select x-model="cells[editing].text">
-                                    <option value="4_ON_D4">d4</option>
-                                    <option value="6_ON_D6">d6</option>
-                                    <option value="8_ON_D8">d8</option>
-                                    <option value="10_ON_D10">d10</option>
-                                    <option value="12_ON_D12">d12</option>
-                                    <option value="20_ON_D20">d20</option>
-                                </select>
-                            </label> -->
-                            <label>
-                                Font Size
-                                <input type="text" x-model="cells[editing].fontSize">
-                            </label>
-                        </div>
-                    </template>
-                    <div class="toolbar-section">
-                        <p>Cell Type</p>
-                        <button @click="applyChangeToCell( 'type', 'static', 'Static' )">Static</button>
-                        <button @click="applyChangeToCell( 'type', 'number', '0' )">Number</button>
-                        <button @click="applyChangeToCell( 'type', 'text', 'Text' )">Text</button>
-                        <button @click="applyChangeToCell( 'type', 'textarea', 'Textarea' )">Textarea</button>
-                        <button @click="applyChangeToCell( 'type', 'spacer' )">Spacer</button>
-                        <button @click="applyChangeToCell( 'type', 'divider' )">Divider</button>
-                        <button @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )">Image</button>
-                        <button @click="applyChangeToCell( 'type', 'checkbox', 0 )">Checkbox</button>
-                        <button @click="applyChangeToCell( 'type', 'die', '6_ON_D6' )">Die Icon</button>
-                        <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
-                    </div>
-                    <div class="toolbar-section">
-                        <p>Style Controls</p>
-                        <button x-show="!cells[editing].border" @click="applyChangeToCell( 'border', true )">Toggle Border</button>
-                        <button x-show="cells[editing].border" @click="applyChangeToCell( 'border', false )">Toggle Border</button>
-                    </div>
-                    <div class="toolbar-section">
-                        <p>Other Controls</p>
-                        <button @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
-                        <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
-                        <button @click="cells.splice(editing, 1)">Delete</button>
+                    <div class="number">
+                        <p>Height</p>
+                        <input type="number" min="1" max="12" :value="cells[editing]?.height" @change="cells[editing].height = $event.target.value" @click="defaults.height = cells[editing].height">
                     </div>
                 </div>
+                <template x-if="['die', 'static'].includes( cells[editing]?.type )">
+                    <div class="toolbar-section">
+                        <p>Cell Options</p>
+                        <!-- <label>
+                            Choose Die Type
+                            <select x-model="cells[editing].text">
+                                <option value="4_ON_D4">d4</option>
+                                <option value="6_ON_D6">d6</option>
+                                <option value="8_ON_D8">d8</option>
+                                <option value="10_ON_D10">d10</option>
+                                <option value="12_ON_D12">d12</option>
+                                <option value="20_ON_D20">d20</option>
+                            </select>
+                        </label> -->
+                        <label>
+                            Font Size
+                            <input type="text" x-model="cells[editing].fontSize">
+                        </label>
+                    </div>
+                </template>
+                <div class="toolbar-section">
+                    <p>Cell Type</p>
+                    <button @click="applyChangeToCell( 'type', 'static' )">Static</button>
+                    <button @click="applyChangeToCell( 'type', 'number', '0' )">Number</button>
+                    <button @click="applyChangeToCell( 'type', 'text', 'Text' )">Text</button>
+                    <button @click="applyChangeToCell( 'type', 'textarea', 'Textarea' )">Textarea</button>
+                    <button @click="applyChangeToCell( 'type', 'spacer' )">Spacer</button>
+                    <button @click="applyChangeToCell( 'type', 'divider' )">Divider</button>
+                    <button @click="applyChangeToCell( 'type', 'image', 'https://via.placeholder.com/150' )">Image</button>
+                    <button @click="applyChangeToCell( 'type', 'checkbox', 0 )">Checkbox</button>
+                    <button @click="applyChangeToCell( 'type', 'die', '6_ON_D6' )">Die Icon</button>
+                    <!-- <button @click="applyChangeToCell( 'type', 'svg', 0 )">SVG</button> -->
+                </div>
+                <div class="toolbar-section">
+                    <p>Style Controls</p>
+                    <button x-show="!cells[editing]?.border" @click="applyChangeToCell( 'border', true )">Toggle Border</button>
+                    <button x-show="cells[editing]?.border" @click="applyChangeToCell( 'border', false )">Toggle Border</button>
+                </div>
+                <div class="toolbar-section">
+                    <p>Other Controls</p>
+                    <button @click="cells.splice(editing, 0, newCell('text')); editing = editing">Insert Before</button>
+                    <button @click="cells.splice(editing + 1, 0, newCell('text')); editing = editing + 1">Insert After</button>
+                    <button @click="cells.splice(editing, 1)">Delete</button>
+                </div>
+            </div>
 
             <div x-show="importExport != null" class="sheet export-import">
                 <div x-show="importExport == 'export'" class="export">
