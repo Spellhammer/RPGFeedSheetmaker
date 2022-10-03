@@ -583,7 +583,14 @@
                             localSheets = [...localSheets, {name: sheet.name, cells: sheet.cells}];
                         })
                     }
+
+                    let checkForDupes = localSheets.filter( (sheet) => { return sheet.name == this.name } );
                     
+                    if( checkForDupes.length > 0 ) {
+                        if( !confirm('Overwrite ' + this.name + '?') ) return;
+                    }
+                    
+                    localSheets = localSheets.filter( (sheet) => { return sheet.name != this.name } );
                     localSheets.push( {name: this.name, cells: this.cells} );
 
                     window.localStorage.setItem( 'RPGFeedSheetmakerSheets', JSON.stringify( localSheets ) );
